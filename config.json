@@ -1,4 +1,8 @@
 {
-  "name": "@vcmap/hello-world",
-  "showHelloWorldBtn": true
+  "searchProjections": [
+    {
+      "epsg": "25832",
+      "proj4": "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "
+    }
+  ]
 }

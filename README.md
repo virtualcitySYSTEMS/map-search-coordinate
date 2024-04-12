@@ -1,23 +1,22 @@
-# @vcmap/hello-world
+# Coordinate Search Plugin
 
-> Part of the [VC Map Project](https://github.com/virtualcitySYSTEMS/map-ui)
+Extends search widget for coordinate input
 
-This is the `@vcmap/ui` **Hello World** plugin!
+Per default coordinates can be searched in following coordinate reference systems:
 
-## Content
+- app projection (defined in map config)
+- geographic wgs84 (EPSG:4326)
 
-The plugin provides a minimal show-case working example including:
+Additionally other projections can be configured using `searchProjections`.
 
-- implementing the VcsPlugin interface [index.js](/src/index.js)
-  - plugin config
-  - plugin state (set and getState)
-  - plugin hooks
-    - initialize
-    - onVcsAppMounted
-    - destroy
-  - plugin serializing (toJSON)
-  - internationalization (i18n)
-- sample ui-component [helloWorld.vue](/src/helloWorld.vue)
-  - using vcs and vuetify components
-  - plugin assets (getPluginAssetUrl)
-- plugin API testing [spec](/tests/helloWorld.spec.js)
+## Usage
+
+Open the searchbar of the VC Map and type in a coordinate, e.g. `13.405, 52.52`.
+
+Camera will move to the searched position and a balloon shows position in EPSG:4326 and a projected crs.
+
+## Configuration (all optional):
+
+| Property            | Type                       | State    | Description                                                                                                                           |
+| ------------------- | -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `searchProjections` | `Array<ProjectionOptions>` | optional | options for additional search projections, see [VC Map API](https://lib.virtualcitymap.de/core/5.1/docs/types/ProjectionOptions.html) |
