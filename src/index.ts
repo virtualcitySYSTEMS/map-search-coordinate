@@ -32,6 +32,9 @@ export default function coordinateSearchPlugin(
           balloon: {
             title: 'Searched Position',
             description: 'Coordinate',
+            geographic: 'Geographic',
+            projected: 'Projected',
+            swapLonLat: 'Swap Lon/Lat',
           },
           configEditor: {
             projections: 'Projections',
@@ -46,6 +49,9 @@ export default function coordinateSearchPlugin(
           balloon: {
             title: 'Gesuchte Position',
             description: 'Koordinate',
+            geographic: 'Geographisch',
+            projected: 'Projiziert',
+            swapLonLat: 'Tausche Lon/Lat',
           },
           configEditor: {
             projections: 'Projektionen',
