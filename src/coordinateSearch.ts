@@ -44,9 +44,7 @@ class CoordinateSearch implements SearchImpl {
     return name;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore, need fix of the returned type in core api
-  async search(query: string): Array<ResultItem> {
+  async search(query: string): Promise<ResultItem[]> {
     const result = [];
     let coords: Coordinate | undefined;
     const lat = query.match(latRegex);
@@ -108,7 +106,8 @@ class CoordinateSearch implements SearchImpl {
       isWGS84Input: !epsg,
     };
     feature.setProperties(featureProperties);
-    const title = `${this.app.vueI18n.t('searchCoordinate.balloon.title') as string} ${epsg || 'WGS84 (lon/lat)'}`;
+    const title = `${this.app.vueI18n.t('searchCoordinate.balloon.title')} ${epsg || 'WGS84 (lon/lat)'}`;
+
     // eslint-disable-next-line
     // @ts-ignore
     feature[featureInfoViewSymbol] = new BalloonFeatureInfoView(

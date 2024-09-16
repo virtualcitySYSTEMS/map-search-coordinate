@@ -1,64 +1,55 @@
 <template>
   <BalloonComponent v-bind="{ ...$attrs }">
     <template #default="{ attrs }">
-      <v-list-item two-line v-if="Object.values(attrs.attributes).length > 0">
-        <v-list-item-avatar tile size="40">
+      <v-row no-gutters>
+        <v-col cols="2" class="d-flex justify-center align-center">
           <v-icon size="20"> $vcsHomePoint </v-icon>
-        </v-list-item-avatar>
-        <v-list-item-content>
-          <v-list-item-title>
+        </v-col>
+        <v-col cols="10">
+          <VcsLabel class="py-0 vcs-position-display">
             {{ $t('searchCoordinate.balloon.geographic') }} (WGS84)
-          </v-list-item-title>
-          <v-list-item-subtitle>
-            <span class="vcs-position-display">
-              <span class="pr-1">Lat: </span>
-              <span class="pr-1">{{ attrs.attributes.pointWGS84[0] }} </span>
-              <span class="pr-1">Lon: </span>
-              <span class="pr-1">{{ attrs.attributes.pointWGS84[1] }} </span>
-            </span>
-          </v-list-item-subtitle>
-          <v-list-item-title>
+          </VcsLabel>
+          <VcsLabel class="py-0 vcs-position-display vcs-position-value">
+            {{
+              `Lat: ${attrs.attributes.pointWGS84[0]} &nbsp; Lon: ${attrs.attributes.pointWGS84[1]}`
+            }}
+          </VcsLabel>
+          <VcsLabel class="py-0 vcs-position-display">
             {{ $t('searchCoordinate.balloon.projected') }}
             ({{ attrs.attributes.epsg }})
-          </v-list-item-title>
-          <v-list-item-subtitle>
-            <span class="vcs-position-display">
-              <VcsFormattedNumber
-                no-padding
-                prefix="x:"
-                :value="attrs.attributes.pointProjected[0]"
-              />
-              <VcsFormattedNumber
-                no-padding
-                prefix="y:"
-                :value="attrs.attributes.pointProjected[1]"
-              />
-            </span>
-          </v-list-item-subtitle>
-          <VcsFormButton
-            v-if="attrs.attributes.isWGS84Input"
-            @click="swapValue"
-            class="swap-button-padding"
-            >{{ $t('searchCoordinate.balloon.swapLonLat') }}</VcsFormButton
-          >
-        </v-list-item-content>
-      </v-list-item>
+          </VcsLabel>
+          <v-row no-gutters>
+            <VcsFormattedNumber
+              class="py-0 vcs-position-display vcs-position-value"
+              prefix="x:"
+              :model-value="attrs.attributes.pointProjected[0]"
+            />
+            <VcsFormattedNumber
+              class="py-0 pl-2 vcs-position-display vcs-position-value"
+              prefix="y:"
+              :model-value="attrs.attributes.pointProjected[1]"
+            />
+          </v-row>
+          <v-row no-gutters class="pt-2">
+            <VcsFormButton
+              v-if="attrs.attributes.isWGS84Input"
+              @click="swapValue"
+              >{{ $t('searchCoordinate.balloon.swapLonLat') }}
+            </VcsFormButton>
+          </v-row></v-col
+        >
+      </v-row>
     </template>
   </BalloonComponent>
 </template>
+
 <script lang="ts">
-  import {
-    VListItem,
-    VListItemContent,
-    VListItemTitle,
-    VListItemSubtitle,
-    VListItemAvatar,
-    VIcon,
-  } from 'vuetify/lib';
+  import { VCol, VIcon, VRow } from 'vuetify/components';
   import {
     BalloonComponent,
     VcsFormButton,
     VcsFormattedNumber,
+    VcsLabel,
     VcsUiApp,
   } from '@vcmap/ui';
   import { defineComponent, inject } from 'vue';
@@ -73,15 +64,13 @@
     components: {
       VcsFormButton,
       VcsFormattedNumber,
+      VcsLabel,
       BalloonComponent,
-      VListItemAvatar,
+      VCol,
       VIcon,
-      VListItemTitle,
-      VListItem,
-      VListItemContent,
-      VListItemSubtitle,
+      VRow,
     },
-    setup(props, { attrs }) {
+    setup(_, { attrs }) {
       const app = inject('vcsApp') as VcsUiApp;
       const wgs84Position = Projection.transform(
         wgs84Projection,
@@ -91,10 +80,10 @@
       return {
         swapValue(): void {
           app.search
-            .search(wgs84Position.reverse().join(', '))
+            .search(wgs84Position.slice(0, 2).reverse().join(', '))
             .then((results) => {
               if (results.length > 0) {
-                results[0].clicked().catch(() => {});
+                results[0].clicked?.().catch(() => {});
               }
             })
             .catch(() => {});
@@ -105,20 +94,9 @@
 </script>
 <style lang="scss" scoped>
   .vcs-position-display {
-    height: 22px;
-
-    ::v-deep {
-      .vcs-formatted-number,
-      .vcs-formatted-number span {
-        font-size: unset;
-        line-height: unset;
-      }
-      .vcs-formatted-number-dense {
-        line-height: unset;
-      }
+    height: calc(var(--v-vcs-font-size) * 2 - 4px);
+    &.vcs-position-value {
+      color: rgb(var(--v-theme-base-darken-2));
     }
-  }
-  .swap-button-padding {
-    padding-top: 8px !important;
   }
 </style>

@@ -3,26 +3,20 @@
     <v-container class="py-0 px-1">
       <v-row no-gutters>
         <v-col>
-          <VcsLabel html-for="epsg" dense> epsg </VcsLabel>
+          <VcsLabel html-for="epsg"> epsg </VcsLabel>
         </v-col>
         <v-col>
-          <VcsTextField
-            id="epsg"
-            clearable
-            dense
-            v-model.trim="inputOptions.epsg"
-          />
+          <VcsTextField id="epsg" clearable v-model.trim="inputOptions.epsg" />
         </v-col>
       </v-row>
       <v-row no-gutters>
         <v-col>
-          <VcsLabel html-for="proj4" dense> proj4 </VcsLabel>
+          <VcsLabel html-for="proj4"> proj4 </VcsLabel>
         </v-col>
         <v-col>
           <VcsTextField
             id="proj4"
             clearable
-            dense
             v-model.trim="inputOptions.proj4"
           />
         </v-col>
@@ -45,7 +39,7 @@
 </template>
 
 <script lang="ts">
-  import { VContainer, VRow, VCol } from 'vuetify/lib';
+  import { VContainer, VRow, VCol } from 'vuetify/components';
   import {
     VcsLabel,
     VcsTextField,
@@ -109,11 +103,11 @@
     },
     props: {
       getConfig: {
-        type: Function as PropType<() => Promise<PluginConfig>>,
+        type: Function as PropType<() => PluginConfig>,
         required: true,
       },
       setConfig: {
-        type: Function,
+        type: Function as PropType<(config: object | undefined) => void>,
         required: true,
       },
     },
@@ -123,27 +117,18 @@
       const projectionItems: Ref<Array<ProjectionListItem>> = ref([]);
       const inputOptions: Ref<ProjectionOptions> = ref({});
 
-      props
-        .getConfig()
-        .then((config: PluginConfig) => {
-          Object.assign(localConfig.value, config);
-          if (localConfig.value.searchProjections) {
-            projectionItems.value = localConfig.value.searchProjections
-              .map((options: ProjectionOptions) => {
-                return createProjectionItem(options, projectionItems);
-              })
-              .filter((item) => item !== null);
-          }
-        }) // eslint-disable-next-line no-console
-        .catch((err) => {
-          app.notifier.add({
-            message: (err as Error).message,
-            type: NotificationType.ERROR,
-          });
-        });
+      const config = props.getConfig();
+      Object.assign(localConfig.value, config);
+      if (localConfig.value.searchProjections) {
+        projectionItems.value = localConfig.value.searchProjections
+          .map((options: ProjectionOptions) => {
+            return createProjectionItem(options, projectionItems);
+          })
+          .filter((item) => item !== null);
+      }
 
-      const apply = async (): Promise<void> => {
-        await props.setConfig({
+      const apply = (): void => {
+        props.setConfig({
           searchProjections: projectionItems.value.map((item) => item.value),
         });
       };
@@ -164,7 +149,7 @@
             app.notifier.add({
               message: app.vueI18n.t(
                 'searchCoordinate.configEditor.invalidInput',
-              ) as string,
+              ),
               type: NotificationType.ERROR,
             });
           }

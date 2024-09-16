@@ -1,5 +1,4 @@
 import { PluginConfigEditor, VcsPlugin, VcsUiApp } from '@vcmap/ui';
-import { Component } from 'vue';
 import { name, version, mapVersion } from '../package.json';
 import CoordinateSearch, { PluginConfig } from './coordinateSearch.js';
 import ConfigEditor from './ConfigEditor.vue';
@@ -7,6 +6,7 @@ import ConfigEditor from './ConfigEditor.vue';
 export default function coordinateSearchPlugin(
   config: PluginConfig,
 ): VcsPlugin<Record<never, never>, Record<never, never>> {
+  let app: VcsUiApp;
   return {
     get name(): string {
       return name;
@@ -21,6 +21,7 @@ export default function coordinateSearchPlugin(
       return config;
     },
     initialize(vcsUiApp: VcsUiApp): void {
+      app = vcsUiApp;
       vcsUiApp.search.add(new CoordinateSearch(vcsUiApp, config), name);
     },
     getDefaultOptions(): PluginConfig {
@@ -62,8 +63,15 @@ export default function coordinateSearchPlugin(
         },
       },
     },
-    getConfigEditors(): PluginConfigEditor[] {
-      return [{ component: ConfigEditor as Component & { title: string } }];
+    getConfigEditors(): PluginConfigEditor<object>[] {
+      return [
+        {
+          component: ConfigEditor,
+          infoUrlCallback: app?.getHelpUrlCallback(
+            '/components/plugins/searchToolConfig.html#id_searchCoordinateConfig',
+          ),
+        },
+      ];
     },
   };
 }

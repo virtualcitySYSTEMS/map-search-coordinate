@@ -61,7 +61,7 @@ describe('VcsPlugin Interface test', () => {
         expect(pluginInstance?.i18n).to.be.a('object').with.property('en');
       }
     });
-    it('should use unscoped plugin name as namespace for plugin specific i18n entries', () => {
+    it('should use unscoped, camel-case plugin name as namespace for plugin specific i18n entries', () => {
       if (pluginInstance?.i18n) {
         expect(pluginInstance.i18n).to.be.a('object');
         const [scope, name] = packageJSON.name.split('/');
@@ -90,11 +90,15 @@ describe('VcsPlugin Interface test', () => {
   });
 
   describe('options & serialization', () => {
-    it('should return default options', () => {
-      expect(pluginInstance?.getDefaultOptions?.()).to.be.a('object');
+    it('may return default options', () => {
+      if (pluginInstance?.getDefaultOptions) {
+        expect(pluginInstance.getDefaultOptions()).to.be.a('object');
+      }
     });
-    it('should implement toJSON returning the plugin config', () => {
-      expect(pluginInstance?.toJSON?.()).to.be.a('object');
+    it('may implement toJSON returning the plugin config', () => {
+      if (pluginInstance?.toJSON) {
+        expect(pluginInstance.toJSON()).to.be.a('object');
+      }
     });
   });
 
@@ -106,7 +110,7 @@ describe('VcsPlugin Interface test', () => {
 
     beforeAll(async () => {
       app = new VcsUiApp();
-      app.plugins.add(pluginInstance);
+      app.plugins.add(pluginInstance!);
       pluginInstance2 = await loadPlugin(packageJSON.name, {
         name: packageJSON.name,
         version: '2.0.0',
@@ -122,8 +126,9 @@ describe('VcsPlugin Interface test', () => {
     });
 
     it('should override the plugin correctly', () => {
-      expect(() => app.plugins.override(pluginInstance2)).to.not.throw;
-      app.plugins.override(pluginInstance2);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      expect(() => app.plugins.override(pluginInstance2!)).to.not.throw;
+      app.plugins.override(pluginInstance2!);
       expect(app.plugins.getByKey(packageJSON.name)).to.have.property(
         testPropSymbol,
         'test',
@@ -132,8 +137,8 @@ describe('VcsPlugin Interface test', () => {
     });
 
     it('should reincarnate the plugin correctly', async () => {
-      expect(() => app.plugins.remove(pluginInstance2)).to.not.throw;
-      app.plugins.remove(pluginInstance2);
+      expect(() => app.plugins.remove(pluginInstance2!)).to.not.throw;
+      app.plugins.remove(pluginInstance2!);
       await sleep(0);
       expect(app.plugins.getByKey(packageJSON.name)).not.to.have.property(
         testPropSymbol,
