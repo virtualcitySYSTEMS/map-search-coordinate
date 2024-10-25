@@ -32,7 +32,7 @@
       </v-row>
       <VcsList
         title="searchCoordinate.configEditor.projections"
-        :items="projectionItems"
+        :items="[...defaultProjectionItems, ...projectionItems]"
       />
     </v-container>
   </AbstractConfigEditor>
@@ -50,8 +50,20 @@
     NotificationType,
     VcsUiApp,
   } from '@vcmap/ui';
-  import { ref, defineComponent, PropType, Ref, inject } from 'vue';
-  import { Projection, ProjectionOptions } from '@vcmap/core';
+  import {
+    ref,
+    defineComponent,
+    PropType,
+    Ref,
+    inject,
+    toRaw,
+    reactive,
+  } from 'vue';
+  import {
+    getDefaultProjection,
+    Projection,
+    ProjectionOptions,
+  } from '@vcmap/core';
   import { PluginConfig } from './coordinateSearch.js';
 
   type ProjectionListItem = VcsListItem & {
@@ -90,6 +102,7 @@
 
   export default defineComponent({
     name: 'CoordinateSearchEditor',
+    methods: { reactive },
     title: 'Coordinate Search Editor',
     components: {
       VcsFormButton,
@@ -113,12 +126,26 @@
     },
     setup(props) {
       const app = inject<VcsUiApp>('vcsApp')!;
-      const localConfig: Ref<PluginConfig> = ref({} as PluginConfig);
+      const localConfig: Ref<PluginConfig> = ref(props.getConfig());
+      const defaultProjection = getDefaultProjection();
+      const defaultProjectionCode = defaultProjection.proj.getCode();
+      const defaultProjectionItems = ref([
+        {
+          name: 'EPSG:4326 (default)',
+          title: 'EPSG:4326 (default)',
+          value: { epsg: 4326 },
+          disabled: true,
+        },
+        {
+          name: `${defaultProjectionCode} (default)`,
+          title: `${defaultProjectionCode} (default)`,
+          value: { epsg: defaultProjection.epsg },
+          disabled: true,
+        },
+      ]);
       const projectionItems: Ref<Array<ProjectionListItem>> = ref([]);
       const inputOptions: Ref<ProjectionOptions> = ref({});
 
-      const config = props.getConfig();
-      Object.assign(localConfig.value, config);
       if (localConfig.value.searchProjections) {
         projectionItems.value = localConfig.value.searchProjections
           .map((options: ProjectionOptions) => {
@@ -129,15 +156,18 @@
 
       const apply = (): void => {
         props.setConfig({
-          searchProjections: projectionItems.value.map((item) => item.value),
+          ...localConfig.value,
+          searchProjections: projectionItems.value.map((item) =>
+            toRaw(item.value),
+          ),
         });
       };
 
       return {
         apply,
-        localConfig,
         inputOptions,
         projectionItems,
+        defaultProjectionItems,
         addProjectionItem(): void {
           const projectionItem = createProjectionItem(
             inputOptions.value,

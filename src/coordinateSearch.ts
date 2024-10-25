@@ -53,10 +53,10 @@ class CoordinateSearch implements SearchImpl {
     if (lon && lat) {
       coords = parseDMS([lon[0], lat[0]]);
     } else {
-      const cArray = query.match(/\d+([.]\d*)?/g);
+      const cArray = query.match(/-?\d+([.,]\d*)?/g);
       if (cArray) {
         coords = cArray
-          .map((number) => parseFloat(number))
+          .map((number) => parseFloat(number.replace(',', '.')))
           .filter(Number.isFinite)
           .slice(0, 2);
       }
