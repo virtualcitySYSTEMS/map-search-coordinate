@@ -38,9 +38,10 @@ export default function coordinateSearchPlugin(
             swapLonLat: 'Swap Lon/Lat',
           },
           configEditor: {
+            title: 'Coordinate Search Editor',
             projections: 'Projections',
             addProjection: 'Add',
-            removeProjection: 'remove projection',
+            removeProjection: 'Remove projection',
             invalidInput: 'Please enter a valid epsg or proj4',
           },
         },
@@ -55,6 +56,7 @@ export default function coordinateSearchPlugin(
             swapLonLat: 'Tausche Lon/Lat',
           },
           configEditor: {
+            title: 'Koordinatensuche Editor',
             projections: 'Projektionen',
             addProjection: 'hinzufügen',
             removeProjection: 'Projektion entfernen',
@@ -67,8 +69,10 @@ export default function coordinateSearchPlugin(
       return [
         {
           component: ConfigEditor,
+          title: 'searchCoordinate.configEditor.title',
           infoUrlCallback: app?.getHelpUrlCallback(
             '/components/plugins/searchToolConfig.html#id_searchCoordinateConfig',
+            'app-configurator',
           ),
         },
       ];

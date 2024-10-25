@@ -103,7 +103,6 @@
   export default defineComponent({
     name: 'CoordinateSearchEditor',
     methods: { reactive },
-    title: 'Coordinate Search Editor',
     components: {
       VcsFormButton,
       VcsList,
