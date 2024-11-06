@@ -1,29 +1,15 @@
 <template>
   <AbstractConfigEditor @submit="apply" v-bind="{ ...$attrs, ...$props }">
     <v-container class="py-0 px-1">
+      <v-form v-model="validProjection">
+        <vcs-projection v-model="inputOptions" required />
+      </v-form>
       <v-row no-gutters>
         <v-col>
-          <VcsLabel html-for="epsg"> epsg </VcsLabel>
-        </v-col>
-        <v-col>
-          <VcsTextField id="epsg" clearable v-model.trim="inputOptions.epsg" />
-        </v-col>
-      </v-row>
-      <v-row no-gutters>
-        <v-col>
-          <VcsLabel html-for="proj4"> proj4 </VcsLabel>
-        </v-col>
-        <v-col>
-          <VcsTextField
-            id="proj4"
-            clearable
-            v-model.trim="inputOptions.proj4"
-          />
-        </v-col>
-      </v-row>
-      <v-row no-gutters>
-        <v-col>
-          <VcsFormButton @click="addProjectionItem">
+          <VcsFormButton
+            @click="addProjectionItem"
+            :disabled="!validProjection"
+          >
             {{
               $t('searchCoordinate.configEditor.addProjection')
             }}</VcsFormButton
@@ -32,20 +18,19 @@
       </v-row>
       <VcsList
         title="searchCoordinate.configEditor.projections"
-        :items="[...defaultProjectionItems, ...projectionItems]"
+        :items="projectionItems"
       />
     </v-container>
   </AbstractConfigEditor>
 </template>
 
 <script lang="ts">
-  import { VContainer, VRow, VCol } from 'vuetify/components';
+  import { VForm, VContainer, VRow, VCol } from 'vuetify/components';
   import {
-    VcsLabel,
-    VcsTextField,
     AbstractConfigEditor,
     VcsList,
     VcsFormButton,
+    VcsProjection,
     VcsListItem,
     NotificationType,
     VcsUiApp,
@@ -63,26 +48,29 @@
     getDefaultProjection,
     Projection,
     ProjectionOptions,
+    wgs84Projection,
   } from '@vcmap/core';
-  import { PluginConfig } from './coordinateSearch.js';
+  import { applyDefaultProjections, PluginConfig } from './coordinateSearch.js';
 
   type ProjectionListItem = VcsListItem & {
     value: ProjectionOptions;
   };
 
   function createProjectionItem(
-    options: ProjectionOptions,
+    projection: Projection,
     projectionItems: Ref<Array<ProjectionListItem>>,
   ): ProjectionListItem | null {
-    if (Projection.validateOptions(options)) {
-      const projection = new Projection(options);
+    if (projection) {
       const code = projection.proj.getCode();
       return {
         name: code,
         title: code,
+        disabled:
+          projection.epsg === wgs84Projection.epsg ||
+          projection.epsg === getDefaultProjection().epsg,
         value: {
-          epsg: options.epsg,
-          proj4: options.proj4,
+          epsg: projection.epsg,
+          proj4: projection.proj4,
         },
         actions: [
           {
@@ -104,14 +92,14 @@
     name: 'CoordinateSearchEditor',
     methods: { reactive },
     components: {
+      VcsProjection,
       VcsFormButton,
       VcsList,
+      VForm,
       VContainer,
       VRow,
       VCol,
       AbstractConfigEditor,
-      VcsLabel,
-      VcsTextField,
     },
     props: {
       getConfig: {
@@ -126,39 +114,30 @@
     setup(props) {
       const app = inject<VcsUiApp>('vcsApp')!;
       const localConfig: Ref<PluginConfig> = ref(props.getConfig());
-      const defaultProjection = getDefaultProjection();
-      const defaultProjectionCode = defaultProjection.proj.getCode();
-      const defaultProjectionItems = ref([
-        {
-          name: 'EPSG:4326 (default)',
-          title: 'EPSG:4326 (default)',
-          value: { epsg: 4326 },
-          disabled: true,
-        },
-        {
-          name: `${defaultProjectionCode} (default)`,
-          title: `${defaultProjectionCode} (default)`,
-          value: { epsg: defaultProjection.epsg },
-          disabled: true,
-        },
-      ]);
       const projectionItems: Ref<Array<ProjectionListItem>> = ref([]);
       const inputOptions: Ref<ProjectionOptions> = ref({});
+      const validProjection = ref(false);
 
-      if (localConfig.value.searchProjections) {
-        projectionItems.value = localConfig.value.searchProjections
-          .map((options: ProjectionOptions) => {
-            return createProjectionItem(options, projectionItems);
-          })
-          .filter((item) => item !== null);
-      }
+      projectionItems.value = applyDefaultProjections(
+        (localConfig.value.searchProjections || []).map(
+          (p) => new Projection(p),
+        ),
+      )
+        .map((projection: Projection) => {
+          return createProjectionItem(projection, projectionItems);
+        })
+        .filter((item) => item !== null);
 
       const apply = (): void => {
         props.setConfig({
           ...localConfig.value,
-          searchProjections: projectionItems.value.map((item) =>
-            toRaw(item.value),
-          ),
+          searchProjections: projectionItems.value
+            .map((item) => toRaw(item.value))
+            .filter(
+              (item) =>
+                item.epsg !== wgs84Projection.epsg &&
+                item.epsg !== getDefaultProjection().epsg,
+            ),
         });
       };
 
@@ -166,10 +145,20 @@
         apply,
         inputOptions,
         projectionItems,
-        defaultProjectionItems,
+        validProjection,
         addProjectionItem(): void {
+          const projection = new Projection(inputOptions.value);
+          if (
+            projectionItems.value.some((i) => i.value.epsg === projection.epsg)
+          ) {
+            app.notifier.add({
+              message: app.vueI18n.t('searchCoordinate.configEditor.existing'),
+              type: NotificationType.WARNING,
+            });
+            return;
+          }
           const projectionItem = createProjectionItem(
-            inputOptions.value,
+            projection,
             projectionItems,
           );
           if (projectionItem) {

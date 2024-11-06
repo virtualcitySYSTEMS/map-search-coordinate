@@ -1,8 +1,8 @@
 {
   "searchProjections": [
     {
-      "epsg": "25832",
-      "proj4": "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "
+      "epsg": "25833",
+      "proj4": "+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "
     }
   ]
 }

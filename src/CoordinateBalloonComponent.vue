@@ -23,11 +23,13 @@
               class="py-0 vcs-position-display vcs-position-value"
               prefix="x:"
               :model-value="attrs.attributes.pointProjected[0]"
+              :number-format-options="{ useGrouping: false }"
             />
             <VcsFormattedNumber
               class="py-0 pl-2 vcs-position-display vcs-position-value"
               prefix="y:"
               :model-value="attrs.attributes.pointProjected[1]"
+              :number-format-options="{ useGrouping: false }"
             />
           </v-row>
           <v-row no-gutters class="pt-2">
@@ -36,8 +38,8 @@
               @click="swapValue"
               >{{ $t('searchCoordinate.balloon.swapLonLat') }}
             </VcsFormButton>
-          </v-row></v-col
-        >
+          </v-row>
+        </v-col>
       </v-row>
     </template>
   </BalloonComponent>
@@ -79,11 +81,15 @@
       );
       return {
         swapValue(): void {
+          const title = app.vueI18n.t('searchCoordinate.balloon.title');
           app.search
             .search(wgs84Position.slice(0, 2).reverse().join(', '))
             .then((results) => {
               if (results.length > 0) {
-                results[0].clicked?.().catch(() => {});
+                results
+                  .find((r) => r.title.includes(title))
+                  .clicked?.()
+                  .catch(() => {});
               }
             })
             .catch(() => {});

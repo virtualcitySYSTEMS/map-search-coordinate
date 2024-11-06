@@ -23,6 +23,14 @@ export type PluginConfig = {
   searchProjections?: Array<ProjectionOptions>;
 };
 
+export function applyDefaultProjections(
+  searchProjections: Array<Projection>,
+): Array<Projection> {
+  return [wgs84Projection, getDefaultProjection(), ...searchProjections].filter(
+    (value, idx, arr) => idx === arr.findIndex((v) => v.epsg === value.epsg),
+  );
+}
+
 class CoordinateSearch implements SearchImpl {
   app: VcsUiApp;
 
@@ -45,7 +53,7 @@ class CoordinateSearch implements SearchImpl {
   }
 
   async search(query: string): Promise<ResultItem[]> {
-    const result = [];
+    const result: ResultItem[] = [];
     let coords: Coordinate | undefined;
     const lat = query.match(latRegex);
     const lon = query.match(lonRegex);
@@ -63,23 +71,25 @@ class CoordinateSearch implements SearchImpl {
     }
 
     if (Array.isArray(coords) && coords.length === 2) {
-      const projection = getDefaultProjection();
-      if (containsCoordinate(wgs84Projection.proj.getExtent(), coords)) {
-        result.push(this.createResultItem(coords));
-      } else {
-        const pointWGS84 = Projection.transform(
-          wgs84Projection,
-          projection,
-          coords,
-        );
-        result.push(this.createResultItem(pointWGS84, coords, projection.epsg));
-        if (this.searchProjections) {
-          this.searchProjections.forEach((proj) => {
-            const point = Projection.transform(wgs84Projection, proj, coords);
-            result.push(this.createResultItem(point, coords, proj.epsg));
-          });
+      const projections = applyDefaultProjections(this.searchProjections);
+      projections.forEach((projection) => {
+        const point = Projection.transform(wgs84Projection, projection, coords);
+        const projExtent = projection.proj.getExtent();
+        // XXX unfortunately @vcmap/core projection does not support extent, so this is only available for 4326
+        if (projExtent) {
+          if (containsCoordinate(projExtent, point)) {
+            if (projection.epsg === wgs84Projection.epsg) {
+              result.push(this.createResultItem(coords));
+            } else {
+              result.push(
+                this.createResultItem(point, coords, projection.epsg),
+              );
+            }
+          }
+        } else {
+          result.push(this.createResultItem(point, coords, projection.epsg));
         }
-      }
+      });
     }
     return Promise.resolve(result);
   }
