@@ -1,6 +1,6 @@
 {
   "name": "@vcmap/search-coordinate",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Extension of search widget for coordinates",
   "type": "module",
   "main": "dist/index.ts",
