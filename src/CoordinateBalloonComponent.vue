@@ -86,6 +86,8 @@
             .search(wgs84Position.slice(0, 2).reverse().join(', '))
             .then((results) => {
               if (results.length > 0) {
+                // eslint-disable-next-line
+                // @ts-ignore
                 results
                   .find((r) => r.title.includes(title))
                   .clicked?.()

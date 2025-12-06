@@ -126,6 +126,8 @@ class CoordinateSearch implements SearchImpl {
         balloonTitle: title,
         balloonSubtitle: '',
       },
+      // eslint-disable-next-line
+      // @ts-ignore
       CoordinateBalloonComponent,
     );
     return {
